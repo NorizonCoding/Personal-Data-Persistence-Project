@@ -3,15 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
 
 public class MainManager : MonoBehaviour
 {
-    public Brick BrickPrefab;
-    public int LineCount = 6;
-    public Rigidbody Ball;
+    public Brick brickPrefab;
+    public int lineCount = 6;
+    public Rigidbody ball;
 
-    public Text ScoreText;
-    public GameObject GameOverText;
+    public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI scoreText2;
+    public TextMeshProUGUI nameDisplay;
+    public GameObject gameOverText;
     
     private bool m_Started = false;
     private int m_Points;
@@ -26,16 +29,31 @@ public class MainManager : MonoBehaviour
         int perLine = Mathf.FloorToInt(4.0f / step);
         
         int[] pointCountArray = new [] {1,1,2,2,5,5};
-        for (int i = 0; i < LineCount; ++i)
+        for (int i = 0; i < lineCount; ++i)
         {
             for (int x = 0; x < perLine; ++x)
             {
-                Vector3 position = new Vector3(-1.5f + step * x, 2.5f + i * 0.3f, 0);
-                var brick = Instantiate(BrickPrefab, position, Quaternion.identity);
+                Vector3 position = new(-1.5f + step * x, 2.5f + i * 0.3f, 0);
+                var brick = Instantiate(brickPrefab, position, Quaternion.identity);
                 brick.PointValue = pointCountArray[i];
                 brick.onDestroyed.AddListener(AddPoint);
             }
         }
+    }
+
+    private void Awake()
+    {
+        if (SessionManager.instance != null)
+        {
+            nameDisplay.text = SessionManager.instance.curPlayerName;
+            scoreText2.text = "Best Score : " + SessionManager.instance.highestPlayer.playerName + " : " + SessionManager.instance.highestPlayer.score;
+        }
+    }
+
+    public void BackToMenu() 
+    {
+        SessionManager.instance.playerScores.Add(new SessionManager.PlayerScoreData(SessionManager.instance.curPlayerName, m_Points));
+        SceneManager.LoadScene(0);
     }
 
     private void Update()
@@ -49,8 +67,8 @@ public class MainManager : MonoBehaviour
                 Vector3 forceDir = new Vector3(randomDirection, 1, 0);
                 forceDir.Normalize();
 
-                Ball.transform.SetParent(null);
-                Ball.AddForce(forceDir * 2.0f, ForceMode.VelocityChange);
+                ball.transform.SetParent(null);
+                ball.AddForce(forceDir * 2.0f, ForceMode.VelocityChange);
             }
         }
         else if (m_GameOver)
@@ -65,12 +83,12 @@ public class MainManager : MonoBehaviour
     void AddPoint(int point)
     {
         m_Points += point;
-        ScoreText.text = $"Score : {m_Points}";
+        scoreText.text = $"Score : {m_Points}";
     }
 
     public void GameOver()
     {
         m_GameOver = true;
-        GameOverText.SetActive(true);
+        gameOverText.SetActive(true);
     }
 }
